@@ -23,5 +23,5 @@ class InputHandler(tcod.event.EventDispatch):
             raise SystemExit()
 
         # Alt+Enter to toggle fullscreen mode
-        elif event.sym == tcod.event.K_KP_ENTER and (event.mod & tcod.event.KMOD_ALT):
-            tcod.console_set_fullscreen(not tcod.console_is_fullscreen)
+        elif event.sym == tcod.event.K_RETURN and (event.mod & tcod.event.KMOD_ALT):
+            tcod.console_set_fullscreen(not tcod.console_is_fullscreen())

@@ -1,48 +1,40 @@
-import tcod as libtcod
+import tcod
+import tcod.event
 
-from input_handlers import handle_keys
+from input_handler import InputHandler
+from state import player
 
 def main():
     screen_width = 80
     screen_height = 50
 
-    player_x = int(screen_width / 2)
-    player_y = int(screen_height / 2)
+    player.x = int(screen_width / 2)
+    player.y = int(screen_height / 2)
 
-    libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-    libtcod.console_init_root(screen_width, screen_height, 'Roguelikedev2019', False)
-
-    con = libtcod.console_new(screen_width, screen_height)
-    key = libtcod.Key()
-    mouse = libtcod.Mouse()
-
-    while not libtcod.console_is_window_closed():
-        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
-        libtcod.console_set_default_foreground(con, libtcod.white)
-        libtcod.console_put_char(con, player_x, player_y, '@', libtcod.BKGND_NONE)
-        libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
-        libtcod.console_flush()
-
-        libtcod.console_put_char(con, player_x, player_y, ' ', libtcod.BKGND_NONE)
-
-        action = handle_keys(key)
-
-        move = action.get('move')
-        exit = action.get('exit')
-        fullscreen = action.get('fullscreen')
-
-        if move:
-            dx, dy = move
-            player_x += dx
-            player_y += dy
-
-        if exit:
-            return True
-        
-        if fullscreen:
-            libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+    tcod.console_set_custom_font(
+        'arial10x10.png',
+        tcod.FONT_TYPE_GREYSCALE | tcod.FONT_LAYOUT_TCOD
+    )
     
+    with tcod.console_init_root(
+        screen_width,
+        screen_height,
+        'Roguelikedev2019', 
+        order='F', 
+        renderer=tcod.RENDERER_SDL2,
+        vsync=True
+    ) as root_console:
 
+        con = tcod.console.Console(screen_width, screen_height, order='F')
+        handler = InputHandler()
+
+        while True:
+            con.clear()
+            con.put_char(player.x, player.y, ord('@'))
+            con.blit(root_console, 0, 0, 0, 0, screen_width, screen_height)
+            tcod.console_flush()
+            for event in tcod.event.wait():
+                handler.dispatch(event)
 
 if __name__ == '__main__':
     main()

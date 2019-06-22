@@ -19,8 +19,12 @@ class GameMap:
         self.tiles = self.initialize_tiles()
 
     def is_blocked(self, x, y):
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            return True
+        
         if self.tiles[x][y].block_move:
             return True
+        
         
         return False
     

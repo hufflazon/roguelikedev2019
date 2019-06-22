@@ -2,14 +2,24 @@ import tcod
 import tcod.event
 
 from input_handler import InputHandler
-from state import player
+from entity import Entity
+from render_functions import render_all
+from map import GameMap
 
 def main():
     screen_width = 80
     screen_height = 50
+    map_width = 80
+    map_height = 45
 
-    player.x = int(screen_width / 2)
-    player.y = int(screen_height / 2)
+    colors = {
+        'dark_wall': (0 , 0, 100),
+        'dark_ground': (50, 50 , 150)
+    }
+
+    player = Entity(int(screen_width / 2), int(screen_height / 2), '@', tcod.white)
+    npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), '@', tcod.yellow)
+    entities = [player, npc]
 
     tcod.console_set_custom_font(
         'arial10x10.png',
@@ -26,11 +36,12 @@ def main():
     ) as root_console:
 
         con = tcod.console.Console(screen_width, screen_height, order='F')
-        handler = InputHandler()
+        game_map = GameMap(map_width, map_height)
+        handler = InputHandler(game_map, player)
 
         while True:
-            con.clear()
-            con.put_char(player.x, player.y, ord('@'))
+            con.clear(fg=(255,255,255))
+            render_all(con, entities, game_map, colors)
             con.blit(root_console, 0, 0, 0, 0, screen_width, screen_height)
             tcod.console_flush()
             for event in tcod.event.wait():

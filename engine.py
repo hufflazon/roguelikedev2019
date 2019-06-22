@@ -13,8 +13,8 @@ def main():
     map_height = 45
 
     colors = {
-        'dark_wall': (0 , 0, 100),
-        'dark_ground': (50, 50 , 150)
+        'dark_wall': tcod.lighter_gray,
+        'dark_ground': tcod.gray
     }
 
     player = Entity(int(screen_width / 2), int(screen_height / 2), '@', tcod.white)

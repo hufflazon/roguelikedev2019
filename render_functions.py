@@ -17,7 +17,8 @@ def draw_map(con, game_map, colors):
             wall = game_map.tiles[x][y].block_sight
 
             if wall:
-                con.bg[x,y,]= colors.get('dark_wall')
+                con.fg[x,y,]= colors.get('dark_wall')
+                con.ch[x,y] = ord('#')
             else:
-                con.bg[x,y,] = colors.get('dark_ground')
-    
+                con.fg[x,y,] = colors.get('dark_ground')
+                con.ch[x,y] = ord('.')

@@ -39,20 +39,31 @@ class GameMap:
         """
         tiles = [[Tile() for y in range(self.height)] for x in range(self.width)]
 
-        # Right half is grass. Left is dirt and stone. 
+        # Vertial bands of different ground terrains
         for x in range(self.width):
             for y in range(self.height):
-                if x > self.width / 2:
-                    t = random.randint(0,10)
-                    if t == 0:
+                if x < 20:
+                    tiles[x][y].terrain = Terrain.STONE
+                elif x < 40:
+                    t = random.randint(1,50)
+                    if t == 1:
                         tiles[x][y].terrain = Terrain.BUSH
-                    elif t == 10:
+                    elif t == 50:
+                        tiles[x][y].terrain = Terrain.MUD
+                    else:
+                        tiles[x][y].terrain = Terrain.DIRT
+                elif x < 60:
+                    t = random.randint(1,50)
+                    if t == 50:
                         tiles[x][y].terrain = Terrain.TREE
+                    elif t == 1:
+                        tiles[x][y].terrain = Terrain.BUSH
                     else:
                         tiles[x][y].terrain = Terrain.GRASS
-
-                elif y > self.height / 2:
-                    tiles[x][y].terrain = Terrain.STONE
+                elif x < 70:
+                    tiles[x][y].terrain = Terrain.SAND
+                elif x < 80:
+                    tiles[x][y].terrain = Terrain.DEEP_WATER
 
         # Make a little test room
         for x in range(28,33):
@@ -69,10 +80,6 @@ class GameMap:
         for x in range(45,50):
             for y in range(19,26):
                 tiles[x][y].terrain = Terrain.WATER
-
-        tiles[47][21].terrain = Terrain.DEEP_WATER
-        tiles[47][22].terrain = Terrain.DEEP_WATER
-        tiles[47][23].terrain = Terrain.DEEP_WATER
 
         # Make a lava pond
         for x in range(10,15):

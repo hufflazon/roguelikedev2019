@@ -17,8 +17,21 @@ I will implement a basic equipment system (armor, weapons, potions) and loot dro
 The dungeon will feature multiple levels. Each level will be procedurally generated but have some scripted quest/features and a boss (think Diablo acts but smaller).
 
 ## Current Progress
-* Very basic map and entity rendering is complete.
-* Player movement is accomplished by arrow keys or WASD.
+* Basic map with a variety of terrain types.
+* Player movement is accomplished by arrow keys or WASD. 
+* A component system for interactable map objects.
+* Text is currently being written to the console.
+
+### Controls
+* Arrow keys or WASD to move
+* l - print a short description of the terrain and any objects at the current location.
+* f - interact with objects in the current location
+
+### Objects
+* k - a kobold NPC. It blocks movement.
+* + - a door that can be opened and closed by pressing 'f'
+* O - portals the player can teleport through by pressing 'f'
+* X - a shrine that randomly teleports the player if they press 'f'. WARNING: It can get you stuck!
 
 ## Installing and Running the Game
 1. pip install tcod

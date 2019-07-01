@@ -12,6 +12,10 @@ def main():
     map_width = 80
     map_height = 45
 
+    room_max_size = 10
+    room_min_size = 6
+    max_rooms = 30
+
     player = Entity('player', '@', tcod.white)
 
     tcod.console_set_custom_font(
@@ -31,6 +35,7 @@ def main():
         con = tcod.console.Console(screen_width, screen_height, order='F')
         game_map = GameMap(map_width, map_height, player)
         game_map.make_sample_map()
+        #game_map.make_tutorial_map(max_rooms, room_min_size, room_max_size)
         handler = InputHandler(game_map)
 
         while True:

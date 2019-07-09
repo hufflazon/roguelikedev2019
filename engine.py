@@ -4,6 +4,7 @@ import tcod.event
 from gamemode import Playing
 from entity import Entity
 from map import GameMap
+from mapgen import make_sample_map, make_tutorial_map
 
 def main():
     screen_width = 80
@@ -33,8 +34,8 @@ def main():
 
         con = tcod.console.Console(screen_width, screen_height, order='F')
         game_map = GameMap(map_width, map_height, player)
-        game_map.make_sample_map()
-        #game_map.make_tutorial_map(max_rooms, room_min_size, room_max_size)
+        #game_map.load(make_sample_map(map_width, map_height))
+        game_map.load(make_tutorial_map(map_width, map_height, max_rooms, room_min_size, room_max_size))
 
         handler = Playing(game_map)
 

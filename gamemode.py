@@ -37,40 +37,28 @@ class Playing(GameMode):
         self.fov_recompute = True
         self.state = GameState.PLAYER_TURN
         
-
     def ev_keydown(self, event):
         if self.state == GameState.PLAYER_TURN:
             # Handle Player Movement
             if event.sym == tcod.event.K_UP or event.sym == tcod.event.K_w:
-                self.map.player_move(0, -1)
-                self.fov_recompute = True
-                self.state = GameState.ENEMY_TURN
+                self.player_move(0, -1)
             elif event.sym == tcod.event.K_DOWN or event.sym == tcod.event.K_s:
-                self.map.player_move(0, 1)
-                self.fov_recompute = True
-                self.state = GameState.ENEMY_TURN
+                self.player_move(0, 1)
             elif event.sym == tcod.event.K_LEFT or event.sym == tcod.event.K_a:
-                self.map.player_move(-1, 0)
-                self.fov_recompute = True
-                self.state = GameState.ENEMY_TURN
+                self.player_move(-1, 0)
             elif event.sym == tcod.event.K_RIGHT or event.sym == tcod.event.K_d:
-                self.map.player_move(1, 0)
-                self.fov_recompute = True
-                self.state = GameState.ENEMY_TURN
+                self.player_move(1, 0)
             
             # Handle player interact
             elif event.sym == tcod.event.K_f:
-                self.map.player_interact()
-                self.map.update_flags()
-                self.fov_recompute = True
-                self.state = GameState.ENEMY_TURN
+                self.player_interact()
 
             # Handle player look
             elif event.sym == tcod.event.K_l:
-                self.map.player_look()
+                self.player_look()
         
-        else:
-            super().ev_keydown(event)
+            else:
+                super().ev_keydown(event)
     
     def render(self, con):
         # Draw all the tiles in the game map
@@ -105,3 +93,27 @@ class Playing(GameMode):
                 if obj.is_actor():
                     obj.act()
             self.state = GameState.PLAYER_TURN
+    
+    def player_move(self, dx, dy):
+        self.map.move_entity(self.map.player, dx, dy)
+        self.fov_recompute = True
+        self.state = GameState.ENEMY_TURN
+    
+    def player_interact(self):
+        interacted = False
+        for obj in self.map.get_objects_at(self.map.player.x, self.map.player.y):
+            obj.interact(self.map.player)
+            interacted = True
+        
+        if not interacted:
+            print('Nothing here to interact with.')
+        else:
+            self.map.update_flags()
+            self.fov_recompute = True
+            self.state = GameState.ENEMY_TURN
+
+    def player_look(self):
+        print(self.map.get_terrain_str(self.map.player.x, self.map.player.y))
+        for obj in self.map.get_objects_at(self.map.player.x, self.map.player.y):
+            print(obj.name)
+

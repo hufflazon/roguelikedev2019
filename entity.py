@@ -10,6 +10,7 @@ class Entity:
         self.char = ord(char)
         self.color = color
         self.interactable = None
+        self.actor = None
 
     def put(self, x, y):
         self.x = x
@@ -34,4 +35,13 @@ class Entity:
         
         return False
     
- 
+    def make_actor(self, actor):
+        self.actor = actor
+        actor.set_parent(self)
+    
+    def is_actor(self):
+        return self.actor is not None
+    
+    def act(self):
+        if self.is_actor():
+            return self.actor.act()

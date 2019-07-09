@@ -5,7 +5,7 @@ import tcod
 import numpy
 
 from entity import Entity
-from components import Door, NPC, Teleport, RandomTeleport
+from components import Door, NPC, Teleport, RandomTeleport, Actor
 from terrain import TERRAINS, Terrain, TerrainFlags
 
 class Rect:
@@ -161,6 +161,7 @@ class GameMap:
         
         kobold = Entity('kobold', 'k', tcod.yellow)
         kobold.make_interactable(NPC())
+        kobold.make_actor(Actor())
         self.place_entity(kobold,35,25)
 
         door = Entity('door', '+', tcod.sepia)

@@ -1,5 +1,15 @@
 from random import randint
 
+class Actor:
+    def __init__(self):
+        self.parent = None
+    
+    def set_parent(self, parent):
+        self.parent = parent
+    
+    def act(self):
+        print(f'The {self.parent.name} ponders the meaning of its existence.')
+
 class Interactable:
     def __init__(self, blocks_move=False, blocks_sight=False):
         self.parent = None

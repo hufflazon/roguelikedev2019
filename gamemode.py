@@ -1,7 +1,13 @@
 import tcod
 import tcod.event
 
+from enum import Enum, auto
+
 from terrain import TERRAINS
+
+class GameState(Enum):
+    PLAYER_TURN = auto()
+    ENEMY_TURN = auto()
 
 class GameMode(tcod.event.EventDispatch):
     def __init__(self):
@@ -29,31 +35,39 @@ class Playing(GameMode):
     def __init__(self, map):
         self.map = map
         self.fov_recompute = True
+        self.state = GameState.PLAYER_TURN
+        
 
     def ev_keydown(self, event):
-        # Handle Player Movement
-        if event.sym == tcod.event.K_UP or event.sym == tcod.event.K_w:
-            self.map.player_move(0, -1)
-            self.fov_recompute = True
-        elif event.sym == tcod.event.K_DOWN or event.sym == tcod.event.K_s:
-            self.map.player_move(0, 1)
-            self.fov_recompute = True
-        elif event.sym == tcod.event.K_LEFT or event.sym == tcod.event.K_a:
-            self.map.player_move(-1, 0)
-            self.fov_recompute = True
-        elif event.sym == tcod.event.K_RIGHT or event.sym == tcod.event.K_d:
-            self.map.player_move(1, 0)
-            self.fov_recompute = True
-        
-        # Handle player interact
-        elif event.sym == tcod.event.K_f:
-            self.map.player_interact()
-            self.map.update_flags()
-            self.fov_recompute = True
+        if self.state == GameState.PLAYER_TURN:
+            # Handle Player Movement
+            if event.sym == tcod.event.K_UP or event.sym == tcod.event.K_w:
+                self.map.player_move(0, -1)
+                self.fov_recompute = True
+                self.state = GameState.ENEMY_TURN
+            elif event.sym == tcod.event.K_DOWN or event.sym == tcod.event.K_s:
+                self.map.player_move(0, 1)
+                self.fov_recompute = True
+                self.state = GameState.ENEMY_TURN
+            elif event.sym == tcod.event.K_LEFT or event.sym == tcod.event.K_a:
+                self.map.player_move(-1, 0)
+                self.fov_recompute = True
+                self.state = GameState.ENEMY_TURN
+            elif event.sym == tcod.event.K_RIGHT or event.sym == tcod.event.K_d:
+                self.map.player_move(1, 0)
+                self.fov_recompute = True
+                self.state = GameState.ENEMY_TURN
+            
+            # Handle player interact
+            elif event.sym == tcod.event.K_f:
+                self.map.player_interact()
+                self.map.update_flags()
+                self.fov_recompute = True
+                self.state = GameState.ENEMY_TURN
 
-        # Handle player look
-        elif event.sym == tcod.event.K_l:
-            self.map.player_look()
+            # Handle player look
+            elif event.sym == tcod.event.K_l:
+                self.map.player_look()
         
         else:
             super().ev_keydown(event)
@@ -85,3 +99,9 @@ class Playing(GameMode):
         if self.fov_recompute:
             self.map.compute_fov()
             self.fov_recompute = False
+        
+        if self.state == GameState.ENEMY_TURN:
+            for obj in self.map.objects:
+                if obj.is_actor():
+                    obj.act()
+            self.state = GameState.PLAYER_TURN

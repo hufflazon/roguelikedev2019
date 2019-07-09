@@ -1,9 +1,10 @@
 from random import randint
 
 class Interactable:
-    def __init__(self, blocks_move=False):
+    def __init__(self, blocks_move=False, blocks_sight=False):
         self.parent = None
         self.blocks_move = blocks_move
+        self.blocks_sight = blocks_sight
     
     def set_parent(self, parent):
         self.parent = parent
@@ -14,10 +15,11 @@ class Interactable:
 
     def interact(self, entity):
         print(f'You attempt to interact with the {self.parent.name}.')
+        
 
 class Door(Interactable):
     def __init__(self, open=False):
-        super().__init__(blocks_move = not open)
+        super().__init__(blocks_move = not open, blocks_sight = not open)
     
     def bump(self, entity):
         if self.blocks_move == True:
@@ -34,11 +36,13 @@ class Door(Interactable):
         print('You open the door!')
         self.parent.char = ord('/')
         self.blocks_move = False
+        self.blocks_sight = False
     
     def close_door(self):
         print('You close the door!')
         self.parent.char = ord('+')
         self.blocks_move = True
+        self.blocks_sight = True
 
 class NPC(Interactable):
     def __init__(self):

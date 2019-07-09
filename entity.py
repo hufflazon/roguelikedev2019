@@ -25,9 +25,13 @@ class Entity:
     def bump(self, entity):           
         if self.is_interactable(): 
             return self.interactable.bump(entity)
+        
+        return False
 
     def interact(self, entity):
         if self.is_interactable():
             return self.interactable.interact(entity)
+        
+        return False
     
  

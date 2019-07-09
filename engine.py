@@ -1,9 +1,8 @@
 import tcod
 import tcod.event
 
-from input_handler import InputHandler
+from gamemode import Playing
 from entity import Entity
-from render_functions import render_all
 from map import GameMap
 
 def main():
@@ -36,11 +35,13 @@ def main():
         game_map = GameMap(map_width, map_height, player)
         game_map.make_sample_map()
         #game_map.make_tutorial_map(max_rooms, room_min_size, room_max_size)
-        handler = InputHandler(game_map)
+
+        handler = Playing(game_map)
 
         while True:
             con.clear(fg=(255,255,255))
-            render_all(con, game_map)
+            handler.update()
+            handler.render(con)
             con.blit(root_console, 0, 0, 0, 0, screen_width, screen_height)
             tcod.console_flush()
             for event in tcod.event.wait():

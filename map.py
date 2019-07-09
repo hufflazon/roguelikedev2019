@@ -2,11 +2,11 @@ from enum import Enum, Flag
 from random import randint
 
 import tcod
+import numpy
 
 from entity import Entity
 from components import Door, NPC, Teleport, RandomTeleport
 from terrain import TERRAINS, Terrain, TerrainFlags
-
 
 class Rect:
     def __init__(self, x, y, w, h):
@@ -25,129 +25,139 @@ class Rect:
         return (self.x1 <= other.x2 and self.x2 >= other.x1 and 
                 self.y1 <= other.y2 and self.y2 >= other.y1)
 
-class Tile:
-    """
-    A tile on the map.
-    """
-    def __init__(self, terrain=Terrain.DIRT):
-        self.terrain = terrain
-        self.objects = []
-
 class GameMap:
     def __init__(self, width, height, player):
         self.width = width
         self.height = height
-        self.objects = []
-        self.tiles = self.initialize_tiles()
         self.player = player
+        self.terrain = numpy.zeros((self.width, self.height), dtype=Terrain, order='F')
+        self.explored = numpy.zeros((self.width, self.height), dtype=bool, order='F')
+        self.visible = numpy.zeros((self.width, self.height), dtype=bool, order='F')
+        self.transparent = numpy.ones((self.width, self.height), dtype=bool, order='F')
+        self.objects = []
+    
+    def update_flags(self):
+        for x in range(self.width):
+            for y in range(self.height):
+                self.transparent[x][y] = not TERRAINS[self.terrain[x][y]]['flags'] & TerrainFlags.BLOCKS_SIGHT
+        
+        for obj in self.objects:
+            if obj.interactable:
+                self.transparent[obj.x][obj.y] = not obj.interactable.blocks_sight
 
     def place_entity(self, entity, x, y):
-        self.tiles[x][y].objects.append(entity)
         self.objects.append(entity)
         entity.put(x,y)
         
     def remove_entity(self, entity):
-        self.tiles[entity.x][entity.y].objects.remove(entity)
         self.objects.remove(entity)
 
     def is_blocked(self, entity, x, y):
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             return True
         
-        terrain = TERRAINS[self.tiles[x][y].terrain]
-        if terrain['flags'] and TerrainFlags.BLOCKS_MOVE:
+        terrain = TERRAINS[self.terrain[x][y]]
+        if terrain['flags'] & TerrainFlags.BLOCKS_MOVE:
             if entity.name == 'player':
                 print(terrain['block_str'])
             return True
         
         blocked = False
-        for obj in self.tiles[x][y].objects:
-            blocked = blocked or obj.bump(entity)
-        
+        for obj in self.objects:
+            if obj.x == x and obj.y == y:
+                blocked = blocked or obj.bump(entity)
         return blocked
     
     def move_entity(self, entity, dx, dy):
         nx = entity.x + dx
         ny = entity.y + dy
         if not self.is_blocked(entity, nx, ny):
-            self.tiles[entity.x][entity.y].objects.remove(entity)
             entity.put(nx, ny)
-            self.tiles[nx][ny].objects.append(entity)
 
     def player_interact(self):
         x = self.player.x
         y = self.player.y
-        for obj in self.tiles[x][y].objects:
-            obj.interact(self.player)
-            return True
-        print('Nothing here to interact with.')
-    
+        interacted = False
+        for obj in self.objects:
+            if obj.x == x and obj.y == y:
+                obj.interact(self.player)
+                interacted = True
+        
+        if not interacted:
+            print('Nothing here to interact with.')
+
     def player_look(self):
         x = self.player.x
         y = self.player.y
-        terrain = self.tiles[x][y].terrain
+        terrain = self.terrain[x][y]
         print(TERRAINS[terrain]['look_str'])
-        for obj in self.tiles[x][y].objects:
-            print(obj.name)
-    
+        for obj in self.objects:
+            if obj.x == x and obj.y == y:
+                print(obj.name)
+
     def player_move(self, dx, dy):
         nx = self.player.x + dx
         ny = self.player.y + dy
         if not self.is_blocked(self.player, nx, ny):
             self.player.put(nx, ny)
-    
-    def initialize_tiles(self):
-        return [[Tile(terrain=Terrain.STONE_WALL) for y in range(self.height)] for x in range(self.width)]
-
+        
+    def compute_fov(self):
+        self.visible = tcod.map.compute_fov(
+            transparency=self.transparent,
+            pov=(self.player.x, self.player.y),
+            radius=10,
+            light_walls=True,
+            algorithm=0
+        )
+        self.explored |= self.visible
+        
     def make_sample_map(self):
-        self.tiles = [[Tile(terrain=Terrain.DIRT) for y in range(self.height)] for x in range(self.width)]
-
         # Vertial bands of different ground terrains
         for x in range(self.width):
             for y in range(self.height):
                 if x < 20:
-                    self.tiles[x][y].terrain = Terrain.STONE
+                    self.terrain[x][y] = Terrain.STONE
                 elif x < 40:
                     t = randint(1,50)
                     if t == 1:
-                        self.tiles[x][y].terrain = Terrain.BUSH
+                        self.terrain[x][y] = Terrain.BUSH
                     elif t == 50:
-                        self.tiles[x][y].terrain = Terrain.MUD
+                        self.terrain[x][y] = Terrain.MUD
                     else:
-                        self.tiles[x][y].terrain = Terrain.DIRT
+                        self.terrain[x][y] = Terrain.DIRT
                 elif x < 60:
                     t = randint(1,50)
                     if t == 50:
-                        self.tiles[x][y].terrain = Terrain.TREE
+                        self.terrain[x][y] = Terrain.TREE
                     elif t == 1:
-                        self.tiles[x][y].terrain = Terrain.BUSH
+                        self.terrain[x][y] = Terrain.BUSH
                     else:
-                        self.tiles[x][y].terrain = Terrain.GRASS
+                        self.terrain[x][y] = Terrain.GRASS
                 elif x < 70:
-                    self.tiles[x][y].terrain = Terrain.SAND
+                    self.terrain[x][y] = Terrain.SAND
                 elif x < 80:
-                    self.tiles[x][y].terrain = Terrain.DEEP_WATER
+                    self.terrain[x][y] = Terrain.DEEP_WATER
 
         # Make a little test room
         for x in range(28,33):
-            self.tiles[x][15].terrain = Terrain.STONE_WALL
-            self.tiles[x][20].terrain = Terrain.STONE_WALL
+            self.terrain[x][15] = Terrain.STONE_WALL
+            self.terrain[x][20] = Terrain.STONE_WALL
         for y in range(16,20):
-            self.tiles[28][y].terrain = Terrain.STONE_WALL
-            self.tiles[32][y].terrain = Terrain.STONE_WALL
+            self.terrain[28][y] = Terrain.STONE_WALL
+            self.terrain[32][y] = Terrain.STONE_WALL
         
         # With a door
-            self.tiles[30][20].terrain = Terrain.DIRT
+            self.terrain[30][20] = Terrain.DIRT
 
         # Make a pond
         for x in range(45,50):
             for y in range(19,26):
-                self.tiles[x][y].terrain = Terrain.WATER
+                self.terrain[x][y] = Terrain.WATER
 
         # Make a lava pond
         for x in range(10,15):
             for y in range(30,35):
-                self.tiles[x][y].terrain = Terrain.LAVA
+                self.terrain[x][y] = Terrain.LAVA
         
         kobold = Entity('kobold', 'k', tcod.yellow)
         kobold.make_interactable(NPC())
@@ -170,21 +180,23 @@ class GameMap:
         self.place_entity(portal2, 40,40)
 
         self.player.put(40,25)
+        self.update_flags()
     
     def create_room(self, room):
         for x in range(room.x1 + 1, room.x2):
             for y in range(room.y1 + 1, room.y2):
-                self.tiles[x][y].terrain = Terrain.STONE
+                self.terrain[x][y] = Terrain.STONE
     
     def create_h_tunnel(self, x1, x2, y):
         for x in range(min(x1, x2), max(x1, x2) + 1):
-            self.tiles[x][y].terrain = Terrain.STONE
+            self.terrain[x][y] = Terrain.STONE
 
     def create_v_tunnel(self, y1, y2, x):
         for y in range(min(y1, y2), max(y1, y2) + 1):
-            self.tiles[x][y].terrain = Terrain.STONE
+            self.terrain[x][y] = Terrain.STONE
 
     def make_tutorial_map(self, max_rooms, room_min_size, room_max_size):
+        self.terrain = [[Terrain.STONE_WALL for y in range(self.height)] for x in range(self.width)]
         rooms = []
         num_rooms = 0
 
@@ -226,4 +238,6 @@ class GameMap:
                     
                 rooms.append(new_room)
                 num_rooms += 1
+    
+        self.update_flags()
 

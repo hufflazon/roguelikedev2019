@@ -1,3 +1,12 @@
+import math
+from enum import Enum
+
+class RenderOrder(Enum):
+    CORPSE = 1
+    ITEM = 2
+    ACTOR = 3
+
+
 class Entity:
     """
     An entity on the map (player, enemy, item, etc)
@@ -11,37 +20,39 @@ class Entity:
         self.color = color
         self.interactable = None
         self.actor = None
+        self.fighter = None
+        self.render_order = RenderOrder.ITEM
 
     def put(self, x, y):
         self.x = x
         self.y = y    
 
-    def make_interactable(self, interactable):
-        self.interactable = interactable
-        interactable.set_parent(self)
-    
     def is_interactable(self):
         return self.interactable is not None
     
-    def bump(self, entity):           
+    def bump(self):           
         if self.is_interactable(): 
-            return self.interactable.bump(entity)
+            return self.interactable.bump()
         
-        return False
+        return False, []
 
-    def interact(self, entity):
+    def interact(self):
         if self.is_interactable():
-            return self.interactable.interact(entity)
+            return self.interactable.interact()
         
-        return False
-    
-    def make_actor(self, actor):
-        self.actor = actor
-        actor.set_parent(self)
+        return []
     
     def is_actor(self):
         return self.actor is not None
     
-    def act(self):
+    def act(self, map, path, target):
         if self.is_actor():
-            return self.actor.act()
+            return self.actor.act(map, path, target)
+
+    def is_fighter(self):
+        return self.fighter is not None
+
+    def distance_to(self, target):
+        dx = self.x - target.x
+        dy = self.y - target.y
+        return math.sqrt(dx ** 2 + dy ** 2)

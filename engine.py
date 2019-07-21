@@ -2,9 +2,11 @@ import tcod
 import tcod.event
 
 from gamemode import Playing
-from entity import Entity
+from entity import Entity, RenderOrder
 from map import GameMap
 from mapgen import make_sample_map, make_tutorial_map
+from components.fighter import Fighter
+from components.interactable import NPC
 
 def main():
     screen_width = 80
@@ -17,6 +19,9 @@ def main():
     max_rooms = 30
 
     player = Entity('player', '@', tcod.white)
+    player.interactable = NPC(player)
+    player.fighter = Fighter(player, hp=30, defense=2, power=5)
+    player.render_order = RenderOrder.ACTOR
 
     tcod.console_set_custom_font(
         'terminal12x12_gs_ro.png',
@@ -34,8 +39,8 @@ def main():
 
         con = tcod.console.Console(screen_width, screen_height, order='F')
         game_map = GameMap(map_width, map_height, player)
-        #game_map.load(make_sample_map(map_width, map_height))
-        game_map.load(make_tutorial_map(map_width, map_height, max_rooms, room_min_size, room_max_size))
+        game_map.load(make_sample_map(map_width, map_height))
+        #game_map.load(make_tutorial_map(map_width, map_height, max_rooms, room_min_size, room_max_size))
 
         handler = Playing(game_map)
 
@@ -43,6 +48,7 @@ def main():
             con.clear(fg=(255,255,255))
             handler.update()
             handler.render(con)
+            con.print(1, screen_height - 2, f'HP: {player.fighter.hp}/{player.fighter.max_hp}', (255,255,255), (0,0,0), tcod.BKGND_NONE, tcod.LEFT)
             con.blit(root_console, 0, 0, 0, 0, screen_width, screen_height)
             tcod.console_flush()
             for event in tcod.event.wait():

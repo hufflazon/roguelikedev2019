@@ -5,7 +5,8 @@ import tcod
 
 from map import GameMap
 from entity import Entity
-from components import Door, NPC, Teleport, RandomTeleport, Actor
+from factory import create_monster
+from components.interactable import Door, NPC, Teleport, RandomTeleport
 from terrain import TERRAINS, Terrain, TerrainFlags
 
 class Rect:
@@ -47,12 +48,10 @@ def create_mobs(room, entities, max_mobs_per_room):
 
         if not any([entity for entity in entities if entity.x == x and entity.y == y]):
             if randint(0, 100) < 80:
-                mob = Entity('harpy', 'h', tcod.desaturated_amber)
+                mob = create_monster('harpy', 'h', tcod.desaturated_amber, hp=10, power=3, defense=0)
             else:
-                mob = Entity('minotaur', 'M', tcod.dark_chartreuse)
+                mob = create_monster('minotaur', 'M', tcod.dark_chartreuse, hp=16, power=4, defense=1)
             
-            mob.make_interactable(NPC())
-            mob.make_actor(Actor())
             mob.put(x, y)
             entities.append(mob)
 
@@ -107,29 +106,27 @@ def make_sample_map(width, height):
             tiles[x][y] = Terrain.LAVA
     
     objects = []
-    kobold = Entity('kobold', 'k', tcod.yellow)
-    kobold.make_interactable(NPC())
-    kobold.make_actor(Actor())
+    kobold = create_monster('kobold', 'k', tcod.yellow)
     kobold.put(35,25)
     objects.append(kobold)
 
     door = Entity('door', '+', tcod.sepia)
-    door.make_interactable(Door(open=False))
+    door.interactable = Door(door, open=False)
     door.put(30, 20)
     objects.append(door)
 
     shrine = Entity('shrine', 'X', tcod.yellow)
-    shrine.make_interactable(RandomTeleport(width-1,height-1))
+    shrine.interactable = RandomTeleport(shrine, width-1,height-1)
     shrine.put(10, 40)
     objects.append(shrine)
 
     portal1 = Entity('strange glowing portal', 'O', tcod.cyan)
-    portal1.make_interactable(Teleport(40,40))
+    portal1.interactable = Teleport(portal1, 40,40)
     portal1.put(10, 10)
     objects.append(portal1)
 
     portal2 = Entity('strange glowing portal', 'O', tcod.cyan)
-    portal2.make_interactable(Teleport(10,10))
+    portal2.interactable = Teleport(portal2, 10,10)
     portal2.put(40,40)
     objects.append(portal2)
 
